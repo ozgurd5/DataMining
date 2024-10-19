@@ -1,5 +1,6 @@
 # Pandas modülü
 import pandas as pd
+from openpyxl.reader.excel import load_workbook
 
 # Selenium modülü
 from selenium import webdriver
@@ -17,6 +18,22 @@ driver = webdriver.Chrome()
 
 # İlanları tutmak için liste
 ilan_listesi = []
+
+excel_file = 'ilanlar.xlsx'
+(pd.DataFrame(columns=[
+    'Başlık',
+    'Konum',
+    'Fiyat',
+    'Oda Sayısı',
+    'Alan',
+    'Bina Yaşı',
+    'Kat',
+    'Tarihi',
+    'Link',
+    'Eşya Durumu',
+    'Isınma Tipi',
+    'Yakıt Tipi'])
+ .to_excel(excel_file, index=False))
 
 sayfa_sayisi = 1 # Toplam sayfa sayısı. Her sayfada 24 ilan var. 21 sayfa için 504 ilan var.
 
@@ -81,8 +98,7 @@ for page in range(1, sayfa_sayisi + 1):
             'Link': ilan_linki,
         })
 
-        print(f"İlan eklendi: {baslik}")
-        print(f"İlan linki eklendi: {ilan_linki}")
+        print(f"İlan eklendi: {baslik}, {konum}, {fiyat}, {oda_sayisi}, {alan}, {bina_yasi}, {kat_sayisi}, {tarih}, {ilan_linki}")
 
     # İlan linklerinde dolaşılıyor
     for ilan_linki in sayfadaki_ilan_linkleri:
@@ -125,13 +141,19 @@ for page in range(1, sayfa_sayisi + 1):
 
         print(f"İlan verileri eklendi: {esya_durumu}, {isinma_tipi}, {yakit_tipi}")
 
+        # İlanı dinamik olarak Excel'e yazıyoruz
+        df = pd.DataFrame([ilan_listesi[ilan_index]])  # Mevcut ilanı DataFrame'e dönüştürüyoruz
+        rows = df.values.tolist()
+        workbook = load_workbook('ilanlar.xlsx')
+        sheet = workbook.active
+        for row in rows:
+            sheet.append(row)
+        workbook.save('ilanlar.xlsx')
+
+        print(f"İlan Excel dosyasına eklendi: {ilan_linki}")
+
     print(f"Sayfa {page} işlendi.")
 
 # Tarayıcı kapatılıyor
 print("Tarayıcı kapatılıyor...")
 driver.quit()
-
-# İlan verileri DataFrame'e dönüştürülüyor ve Excel dosyasına kaydediliyor
-df = pd.DataFrame(ilan_listesi)
-df.to_excel('ilanlar.xlsx', index=False)  # Excel dosyası kaydediliyor
-print("İlanlar başarıyla kaydedildi: ilanlar.xlsx")  # İşlem başarı mesajı
