@@ -18,10 +18,7 @@ driver = webdriver.Chrome()
 # İlanları tutmak için liste
 ilan_listesi = []
 
-# İlanların linklerini tutmak için liste. Eşya ve doğalgaz durumlarına buradan ulaşacağız
-ilan_linkleri = []
-
-sayfa_sayisi = 2 # Toplam sayfa sayısı. Her sayfada 24 ilan var. 21 sayfa için 504 ilan var.
+sayfa_sayisi = 1 # Toplam sayfa sayısı. Her sayfada 24 ilan var. 21 sayfa için 504 ilan var.
 
 for page in range(1, sayfa_sayisi + 1):
     # Sayfa URL'si oluşturuluyor
@@ -38,6 +35,9 @@ for page in range(1, sayfa_sayisi + 1):
     # İlanlar bulunuyor
     ilanlar = driver.find_elements(By.CLASS_NAME, 'listing-item')
     print(f"{len(ilanlar)} ilan bulundu.")
+
+    # Sayfadaki ilan linklerini tutmak için liste
+    sayfadaki_ilan_linkleri = []
 
     # İlanlar işleniyor
     for ilan in ilanlar:
@@ -66,7 +66,7 @@ for page in range(1, sayfa_sayisi + 1):
 
         # İlan linki alınıyor ve ilan_linkleri listesine ekleniyor
         ilan_linki = ilan.find_element(By.CLASS_NAME, 'card-link').get_attribute('href')
-        ilan_linkleri.append(ilan_linki)
+        sayfadaki_ilan_linkleri.append(ilan_linki)
 
         # İlan verileri listeye ekleniyor
         ilan_listesi.append({
@@ -84,47 +84,50 @@ for page in range(1, sayfa_sayisi + 1):
         print(f"İlan eklendi: {baslik}")
         print(f"İlan linki eklendi: {ilan_linki}")
 
-for ilan_linki in ilan_linkleri:
-    # İlan linkine gidiliyor
-    print("İlan linki yükleniyor: ", ilan_linki)
-    driver.get(ilan_linki)
+    # İlan linklerinde dolaşılıyor
+    for ilan_linki in sayfadaki_ilan_linkleri:
+        # İlan linkine gidiliyor
+        print("İlan linki yükleniyor: ", ilan_linki)
+        driver.get(ilan_linki)
 
-    # Sayfa yüklenene kadar bekleniyor
-    WebDriverWait(driver, 10).until(expected_conditions.presence_of_element_located((By.CLASS_NAME, 'txt')))
-    print("İlan linki yüklendi.")
+        # Sayfa yüklenene kadar bekleniyor
+        WebDriverWait(driver, 10).until(expected_conditions.presence_of_element_located((By.CLASS_NAME, 'txt')))
+        print("İlan linki yüklendi.")
 
-    # Tüm spanlar alınıyor
-    spans = driver.find_elements(By.CLASS_NAME, 'txt')
+        # Tüm spanlar alınıyor
+        spans = driver.find_elements(By.CLASS_NAME, 'txt')
 
-    esya_durumu = ''
-    isinma_tipi = ''
-    yakit_tipi = ''
+        esya_durumu = ''
+        isinma_tipi = ''
+        yakit_tipi = ''
 
-    for span in spans:
-        if span.text == 'Eşya Durumu':  # Eğer span 'Eşya Durumu' metnini içeriyorsa
-            # Kardeş öğesi olan diğer span'dan Eşya Durumu'nu al
-            esya_durumu = span.find_element(By.XPATH, "following-sibling::span").text
+        for span in spans:
+            if span.text == 'Eşya Durumu':  # Eğer span 'Eşya Durumu' metnini içeriyorsa
+                # Kardeş öğesi olan diğer span'dan Eşya Durumu'nu al
+                esya_durumu = span.find_element(By.XPATH, "following-sibling::span").text
 
-        elif span.text == 'Isınma Tipi':  # Eğer span 'Isınma Tipi' metnini içeriyorsa
-            # Kardeş öğesi olan diğer span'dan Isınma Tipi'ni al
-            isinma_tipi = span.find_element(By.XPATH, "following-sibling::span").text
+            elif span.text == 'Isınma Tipi':  # Eğer span 'Isınma Tipi' metnini içeriyorsa
+                # Kardeş öğesi olan diğer span'dan Isınma Tipi'ni al
+                isinma_tipi = span.find_element(By.XPATH, "following-sibling::span").text
 
-        elif span.text == 'Yakıt Tipi':  # Eğer span 'Yakıt Tipi' metnini içeriyorsa
-            # Kardeş öğesi olan diğer span'dan Yakıt Tipi'ni al
-            yakit_tipi = span.find_element(By.XPATH, "following-sibling::span").text
+            elif span.text == 'Yakıt Tipi':  # Eğer span 'Yakıt Tipi' metnini içeriyorsa
+                # Kardeş öğesi olan diğer span'dan Yakıt Tipi'ni al
+                yakit_tipi = span.find_element(By.XPATH, "following-sibling::span").text
 
-        if esya_durumu and yakit_tipi and isinma_tipi != '':  # Eğer tüm bilgiler alındıysa
-            break # Döngüden çık
+            if esya_durumu and yakit_tipi and isinma_tipi != '':  # Eğer tüm bilgiler alındıysa
+                break # Döngüden çık
 
-    # İlan listesine 'Eşya Durumu', 'Yakıt Tipi' ve 'Isınma Tipi' ekleniyor
-    ilan_index = ilan_linkleri.index(ilan_linki)
-    ilan_listesi[ilan_index]['Eşya Durumu'] = esya_durumu
-    ilan_listesi[ilan_index]['Isınma Tipi'] = isinma_tipi
-    ilan_listesi[ilan_index]['Yakıt Tipi'] = yakit_tipi
+        # İlan listesine 'Eşya Durumu', 'Yakıt Tipi' ve 'Isınma Tipi' ekleniyor
+        ilan_index = sayfadaki_ilan_linkleri.index(ilan_linki)
+        ilan_listesi[ilan_index]['Eşya Durumu'] = esya_durumu
+        ilan_listesi[ilan_index]['Isınma Tipi'] = isinma_tipi
+        ilan_listesi[ilan_index]['Yakıt Tipi'] = yakit_tipi
 
-    print(f"İlan verileri eklendi: {esya_durumu}, {isinma_tipi}, {yakit_tipi}")
+        print(f"İlan verileri eklendi: {esya_durumu}, {isinma_tipi}, {yakit_tipi}")
 
+    print(f"Sayfa {page} işlendi.")
 
+# Tarayıcı kapatılıyor
 print("Tarayıcı kapatılıyor...")
 driver.quit()
 
