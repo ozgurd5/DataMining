@@ -19,6 +19,7 @@ driver = webdriver.Chrome()
 # İlanları tutmak için liste
 ilan_listesi = []
 
+# Excel dosyası oluşturuluyor
 excel_file = 'ilanlar.xlsx'
 (pd.DataFrame(columns=[
     'Başlık',
@@ -35,7 +36,8 @@ excel_file = 'ilanlar.xlsx'
     'Yakıt Tipi'])
  .to_excel(excel_file, index=False))
 
-sayfa_sayisi = 1 # Toplam sayfa sayısı. Her sayfada 24 ilan var. 21 sayfa için 504 ilan var.
+# Toplam sayfa sayısı. Her sayfada 24 ilan var. 21 sayfa için 504 ilan var.
+sayfa_sayisi = 21
 
 for page in range(1, sayfa_sayisi + 1):
     # Sayfa URL'si oluşturuluyor
@@ -142,12 +144,17 @@ for page in range(1, sayfa_sayisi + 1):
         print(f"İlan verileri eklendi: {esya_durumu}, {isinma_tipi}, {yakit_tipi}")
 
         # İlanı dinamik olarak Excel'e yazıyoruz
-        df = pd.DataFrame([ilan_listesi[ilan_index]])  # Mevcut ilanı DataFrame'e dönüştürüyoruz
+
+        # Mevcut ilanı DataFrame'e dönüştürüyoruz ve liste haline getiriyoruz
+        df = pd.DataFrame([ilan_listesi[ilan_index]])
         rows = df.values.tolist()
+
+        # Excel dosyasını yüklüyoruz
         workbook = load_workbook('ilanlar.xlsx')
         sheet = workbook.active
-        for row in rows:
-            sheet.append(row)
+
+        # İlanı Excel dosyasına ekliyoruz ve dosyayı kaydediyoruz
+        for row in rows: sheet.append(row)
         workbook.save('ilanlar.xlsx')
 
         print(f"İlan Excel dosyasına eklendi: {ilan_linki}")
