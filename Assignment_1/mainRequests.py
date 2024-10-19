@@ -1,7 +1,6 @@
 ﻿import requests
 from bs4 import BeautifulSoup
 import pandas as pd
-import json
 
 # CF Clearance URL ve CycleTLS setup
 CF_CLEARANCE_URL = 'http://localhost:3000/cf-clearance-scraper'
@@ -21,28 +20,14 @@ def create_waf_session(url):
             print("WAF oturumu oluşturuldu.")
             data = response.json()
             return data.text
+
         else:
             print(f"WAF oturumu bağlantı hatası: {response.status_code}")
             create_waf_session(url)
-    except Exception as e:
-        print(f"Hata oluştu: {e}")
-        create_waf_session(url)
 
-def capctha_solver(url):
-    print("cozuyom")
-    try:
-        response = requests.post("http://localhost:3000/cf-clearance-scraper", data=json.dumps({
-            "url": url,
-            "mode": "waf-session"
-        }), headers={
-            "content-type": "application/json",
-        })
-        response.raise_for_status()
-        print("cozdum")
-        return json.loads(response.text)
-    except:
-        print("cozemedim bida deniyom")
-        return capctha_solver(url)
+    except Exception as e:
+        print(f"Hata oluştu, tekrar deneniyor: {e}")
+        create_waf_session(url)
 
 # İlanları tutmak için bir liste
 ilan_listesi = []
@@ -58,7 +43,7 @@ for page in range(1, 2):
 
     while response.status_code != 200:
         print(f"Bağlantı hatası: {response.status_code}")
-        header = capctha_solver(url)
+        header = create_waf_session(url)
         cookie_str = ""
         for cookie in header["cookies"]:
             cookie_str += f"{cookie["name"]}={cookie["value"]};"
