@@ -136,7 +136,8 @@ for page in range(1, sayfa_sayisi + 1):
                 break # Döngüden çık
 
         # İlan listesine 'Eşya Durumu', 'Yakıt Tipi' ve 'Isınma Tipi' ekleniyor
-        ilan_index = sayfadaki_ilan_linkleri.index(ilan_linki)
+        ilan_index = [ilan['Link'] for ilan in ilan_listesi].index(ilan_linki)
+        print("İlan indexi: ", ilan_index)
         ilan_listesi[ilan_index]['Eşya Durumu'] = esya_durumu
         ilan_listesi[ilan_index]['Isınma Tipi'] = isinma_tipi
         ilan_listesi[ilan_index]['Yakıt Tipi'] = yakit_tipi
