@@ -42,19 +42,38 @@ df["Fiyat"] = df["Fiyat"].astype(str).str.replace(r"\D", "", regex=True).astype(
 df = df.sort_values("Fiyat")
 
 # Temizlenmiş veriyi yeni bir Excel dosyasına yaz
-print("\nSadece index ve fiyatı içeren 'temizlenmiş_veri_0.xlsx' dosyası oluşturuldu.")
-df.reset_index()[["index", "Fiyat"]].to_excel("temizlenmiş_veri_0.xlsx", index=False)
+# print("\nSadece index ve fiyatı içeren 'temizlenmiş_veri_0.xlsx' dosyası oluşturuldu.")
+# df.reset_index()[["index", "Fiyat"]].to_excel("temizlenmiş_veri_0.xlsx", index=False)
 
 # K-Means algoritması
 k = 3
 kümeler, merkezler = k_means(df, k)
 
 # Kümeleri ve merkezleri yazdır
+# for i in range(k):
+#     print(f"\nKüme {i + 1} ({len(kümeler[i])} eleman):")
+#     print(kümeler[i])
+#
+# print("\nMerkezler:")
+# print(merkezler)
+
+# Kümeleri ve merkezleri görselleştir
+plt.figure(figsize=(10, 6), dpi=200)
+plt.title(f"K-Means")
+plt.xlabel("Index")
+plt.ylabel("Fiyat")
+plt.grid(True)
+
+x_values = df.index
+print("x_values:", x_values)
+y_values = df["Fiyat"]
+print("y_values:", y_values)
+
+colors = ["red", "green", "blue"]
+color_values = []
 for i in range(k):
-    print(f"\nKüme {i + 1} ({len(kümeler[i])} eleman):")
-    print(kümeler[i])
+    color_values.extend([colors[i]] * len(kümeler[i]))
 
-print("\nMerkezler:")
-print(merkezler)
+plt.scatter(x_values, y_values, color=color_values, s=2)
 
-
+plt.show()
