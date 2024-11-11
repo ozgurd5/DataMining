@@ -38,11 +38,28 @@ df = df.dropna(subset=["Fiyat"])
 df["Fiyat"] = df["Fiyat"].astype(str).str.replace(r"\D", "", regex=True).astype(int)
 
 # Fiyatları küçükten büyüğe sırala
-#df = df.sort_values("Fiyat")
+df = df.sort_values("Fiyat")
 
 # Kümelenmemiş ama temizlenmiş veriyi excel dosyasına yaz
 # print("\nSadece index ve fiyatı içeren 'temizlenmiş_veri_0.xlsx' dosyası oluşturuldu.")
 # df.reset_index()[["index", "Fiyat"]].to_excel("temizlenmiş_veri_0.xlsx", index=False)
+
+# Çeyrek değerleri hesapla
+Q1 = df["Fiyat"].quantile(0.25)
+Q3 = df["Fiyat"].quantile(0.75)
+IQR = Q3 - Q1
+
+# Outlier sınırlarını belirle
+lower_bound = Q1 - 1.5 * IQR
+upper_bound = Q3 + 1.5 * IQR
+
+# Outlierları seç
+outliers = df[(df["Fiyat"] < lower_bound) | (df["Fiyat"] > upper_bound)]
+print("\nOutlierlar (IQR yöntemi):")
+print(outliers[["Fiyat"]])
+
+# Outlierları kaldır
+df = df[(df["Fiyat"] >= lower_bound) & (df["Fiyat"] <= upper_bound)]
 
 # K-Means algoritmasına başla
 k = 3
@@ -58,8 +75,13 @@ merkezler = df.sample(n=k)["Fiyat"].values.astype(float).tolist()
 # Önceki merkezleri tut, başlangıçta tüm değerleri 0 yap
 önceki_merkezler = [0] * k
 
+iteration_counter = 0
+
 # Merkezler değişene kadar döngüyü devam ettir
 while True:
+    iteration_counter += 1
+    print("iterasyon:", iteration_counter)
+
     # K değeri kadar küme oluştur
     kümeler = []
     for i in range(k):
@@ -118,6 +140,14 @@ x_values = df.index
 # Veri kümesindeki fiyat değerlerini y ekseninde göstermek için al
 y_values = df["Fiyat"]
 
+# Y eksenindeki değerlerin 1000'er 1000'er artması için aralıkları ayarla
+y_min, y_max = int(min(y_values)), int(max(y_values))
+
+#y_min'i en yakın 1000'e yuvarla
+y_min = y_min - y_min % 1000
+
+plt.yticks(range(y_min, y_max + 1000, 1000))
+
 # Her küme için farklı renkler belirle
 colors = ["red", "green", "blue"]
 color_values = []
@@ -128,10 +158,8 @@ for i in range(k):
 plt.scatter(x_values, y_values, color=color_values, s=2)
 
 # Merkezleri çiz
+
 plt.scatter(range(k), merkezler, color="black", s=100, marker="x")
 
 # Plot'u kaydet
 plt.savefig("plot.png", dpi=300, bbox_inches='tight')
-
-# Plot'u göster
-plt.show()
