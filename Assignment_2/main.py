@@ -71,11 +71,11 @@ df = df[(df["Fiyat"] >= lower_bound) & (df["Fiyat"] <= upper_bound)]
 ## Fiyat sütununu z-score'a çevir
 #df["Z-Score"] = (df["Fiyat"] - df["Fiyat"].mean()) / df["Fiyat"].std()
 #
-#z_score_modifier = 3
+#z_score_modifier = 0.15
 #
-## Z-Score değeri 3'ten büyük veya -3'ten küçük olan satırları seç
+## Z-Score değeri z_score_modifier'dan büyük veya eksi z_score_modifier'dan küçük olan satırları seç
 #outliers = df[(df["Z-Score"] > z_score_modifier) | (df["Z-Score"] < -z_score_modifier)]
-#print("\nOutlierlar (Z-Score yöntemi):")
+#print("\nOutlierlar (Z-Score yöntemi): ", len(outliers))
 #print(outliers[["Fiyat"]])
 #
 ## Outlierları kaldır
