@@ -239,6 +239,16 @@ print("Minimum:", minimum)
 maksimum = df["Fiyat"].max()
 print("Maksimum:", maksimum)
 
+# Her bir küme için bunları hesapla
+for i in range(k):
+    print(f"\nKüme {i + 1} ({len(kümeler[i])} eleman):")
+    print("Ortalama:", sum(kümeler[i]) / len(kümeler[i]))
+    print("Mod:", pd.Series(kümeler[i]).mode().values[0])
+    print("Medyan:", pd.Series(kümeler[i]).median())
+    print("Standart Sapma:", pd.Series(kümeler[i]).std())
+    print("Minimum:", min(kümeler[i]))
+    print("Maksimum:", max(kümeler[i]))
+
 ########## Excel'e Yaz ##########
 
 # Fiyatları küçükten büyüğe sırala, kümeleriyle birlikte yaz
