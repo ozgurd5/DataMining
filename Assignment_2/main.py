@@ -41,9 +41,9 @@ df["Fiyat"] = df["Fiyat"].astype(str).str.replace(r"\D", "", regex=True).astype(
 # Fiyatları küçükten büyüğe sırala
 df = df.sort_values("Fiyat")
 
-# Kümelenmemiş ama temizlenmiş veriyi excel dosyasına yaz
-# print("\nSadece index ve fiyatı içeren 'temizlenmiş_veri_0.xlsx' dosyası oluşturuldu.")
-# df.reset_index()[["index", "Fiyat"]].to_excel("temizlenmiş_veri_0.xlsx", index=False)
+## Kümelenmemiş ama temizlenmiş veriyi excel dosyasına yaz
+#print("\nSadece index ve fiyatı içeren 'temizlenmiş_veri_0.xlsx' dosyası oluşturuldu.")
+#df.reset_index()[["Fiyat"]].to_excel("temizlenmiş_veri_0.xlsx", index=False)
 
 ########## Outlier Tespiti ##########
 
@@ -96,12 +96,12 @@ merkezler = df.sample(n=k)["Fiyat"].values.astype(float).tolist()
 # Önceki merkezleri tut, başlangıçta tüm değerleri 0 yap
 önceki_merkezler = [0] * k
 
-iteration_counter = 0
+iterasyon_sayacı = 0
 
 # Merkezler değişene kadar döngüyü devam ettir
 while True:
-    iteration_counter += 1
-    print("iterasyon:", iteration_counter)
+    iterasyon_sayacı += 1
+    print("iterasyon:", iterasyon_sayacı)
 
     # K değeri kadar küme oluştur
     kümeler = []
@@ -140,10 +140,10 @@ while True:
 
 ########## Plot ##########
 
-# Plot oluştur
+# Grafik için plot oluştur
 plt.figure(figsize=(10, 6), dpi=300)
 
-# Plot başlığını belirle
+# Grafik plot başlığını belirle
 plt.title(f"Grafik")
 
 # Index sütununu göster
@@ -158,7 +158,7 @@ plt.plot(range(len(fiyatlar)), fiyatlar, marker='o')
 # Grafiği kaydet
 plt.savefig("grafik.png", dpi=300, bbox_inches='tight')
 
-# Plot oluştur
+# Scatter için plot oluştur
 plt.figure(figsize=(10, 6), dpi=300)
 
 # Plot başlığını belirle
@@ -194,10 +194,10 @@ plt.scatter(range(k), merkezler, color="black", s=100, marker="x")
 # Scatter Plot'u kaydet
 plt.savefig("scatter_plot.png", dpi=300, bbox_inches='tight')
 
-# Yeni bir plot oluştur
+# Box için bir plot oluştur
 plt.figure(figsize=(10, 6), dpi=300)
 
-# Box plot başlığını belirle
+# Başlığı belirle
 plt.title(f"K-Means Box Plot")
 
 # Index sütununu göster
@@ -214,3 +214,40 @@ plt.boxplot(kümeler, patch_artist=True, showmeans=True, showfliers=False)
 
 # Box plot'u kaydet
 plt.savefig("box_plot.png", dpi=300, bbox_inches='tight')
+
+########## Özellikler ##########
+
+# Veri sayısı, ortalama, mod, medyan, standart sapma, minimum ve maksimum değerleri hesapla
+veri_sayisi = len(df)
+print("\nVeri Sayısı:", veri_sayisi)
+
+ortalama = df["Fiyat"].mean()
+print("Ortalama:", ortalama)
+
+mod = df["Fiyat"].mode().values[0]
+print("Mod:", mod)
+
+medyan = df["Fiyat"].median()
+print("Medyan:", medyan)
+
+standart_sapma = df["Fiyat"].std()
+print("Standart Sapma:", standart_sapma)
+
+minimum = df["Fiyat"].min()
+print("Minimum:", minimum)
+
+maksimum = df["Fiyat"].max()
+print("Maksimum:", maksimum)
+
+########## Excel'e Yaz ##########
+
+# Fiyatları küçükten büyüğe sırala, kümeleriyle birlikte yaz
+df = df.sort_values("Fiyat")
+
+df["Küme"] = -1
+for i in range(k):
+    df.loc[df["Fiyat"].isin(kümeler[i]), "Küme"] = i + 1
+
+# Excel dosyasına yaz
+print("\nExcel dosyası 'temizlenmiş_veri.xlsx' olarak oluşturuldu.")
+df.reset_index()[["Fiyat","Küme"]].to_excel("temizlenmiş_veri.xlsx", index=False)
