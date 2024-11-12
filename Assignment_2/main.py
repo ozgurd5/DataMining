@@ -39,7 +39,7 @@ df = df.dropna(subset=["Fiyat"])
 df["Fiyat"] = df["Fiyat"].astype(str).str.replace(r"\D", "", regex=True).astype(int)
 
 # Fiyatları küçükten büyüğe sırala
-#df = df.sort_values("Fiyat")
+df = df.sort_values("Fiyat")
 
 # Kümelenmemiş ama temizlenmiş veriyi excel dosyasına yaz
 # print("\nSadece index ve fiyatı içeren 'temizlenmiş_veri_0.xlsx' dosyası oluşturuldu.")
