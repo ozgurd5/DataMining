@@ -15,6 +15,8 @@ df = pd.read_excel("ham_veri.xlsx")
 # pd.reset_option("display.max_rows")
 # pd.reset_option("display.max_columns")
 
+########## Veri Temizleme ##########
+
 # Duplikeleri Link sütununa göre tespit et ve yazdır
 duplikeler = df[df.duplicated(subset="Link", keep="first")]
 print("Duplikeler (aynı linke sahip satırlar): ", len(duplikeler))
@@ -25,8 +27,7 @@ bos_fiyatlar = df[df["Fiyat"].isna()]
 print("\nBoş Fiyatı Olan Satırlar:", len(bos_fiyatlar))
 print(bos_fiyatlar[["Başlık", "Fiyat", "Link"]])
 
-# Temizlik işlemleri
-# Aynı linke sahip satırları kaldır
+# Duplikeleri kaldır
 df = df.drop_duplicates(subset="Link", keep="first")
 
 # Fiyatı olmayan satırları kaldır
@@ -44,43 +45,44 @@ df["Fiyat"] = df["Fiyat"].astype(str).str.replace(r"\D", "", regex=True).astype(
 # print("\nSadece index ve fiyatı içeren 'temizlenmiş_veri_0.xlsx' dosyası oluşturuldu.")
 # df.reset_index()[["index", "Fiyat"]].to_excel("temizlenmiş_veri_0.xlsx", index=False)
 
-# Outlierları tespit etmeye ve kaldırmaya başla
+########## Outlier Tespiti ##########
 
 # IQR yöntemi
 
 # Çeyrek değerleri hesapla
-#Q1 = df["Fiyat"].quantile(0.25)
-#Q3 = df["Fiyat"].quantile(0.75)
-#IQR = Q3 - Q1
-#
-## Outlier sınırlarını belirle
-#lower_bound = Q1 - 1.5 * IQR
-#upper_bound = Q3 + 1.5 * IQR
-#
-## Outlierları seç
-#outliers = df[(df["Fiyat"] < lower_bound) | (df["Fiyat"] > upper_bound)]
-#print("\nOutlierlar (IQR yöntemi):")
-#print(outliers[["Fiyat"]])
-#
-## Outlierları kaldır
-#df = df[(df["Fiyat"] >= lower_bound) & (df["Fiyat"] <= upper_bound)]
+Q1 = df["Fiyat"].quantile(0.25)
+Q3 = df["Fiyat"].quantile(0.75)
+IQR = Q3 - Q1
 
-# Z-Score yöntemi
+# Outlier sınırlarını belirle
+lower_bound = Q1 - 1.5 * IQR
+upper_bound = Q3 + 1.5 * IQR
 
-# Fiyat sütununu z-score'a çevir
-df["Z-Score"] = (df["Fiyat"] - df["Fiyat"].mean()) / df["Fiyat"].std()
-
-z_score_modifier = 3
-
-# Z-Score değeri 3'ten büyük veya -3'ten küçük olan satırları seç
-outliers = df[(df["Z-Score"] > z_score_modifier) | (df["Z-Score"] < -z_score_modifier)]
-print("\nOutlierlar (Z-Score yöntemi):")
+# Outlierları seç
+outliers = df[(df["Fiyat"] < lower_bound) | (df["Fiyat"] > upper_bound)]
+print("\nOutlierlar (IQR yöntemi):")
 print(outliers[["Fiyat"]])
 
 # Outlierları kaldır
-df = df[(df["Z-Score"] <= z_score_modifier) & (df["Z-Score"] >= -z_score_modifier)]
+df = df[(df["Fiyat"] >= lower_bound) & (df["Fiyat"] <= upper_bound)]
 
-# K-Means algoritmasına başla
+# Z-Score yöntemi
+
+## Fiyat sütununu z-score'a çevir
+#df["Z-Score"] = (df["Fiyat"] - df["Fiyat"].mean()) / df["Fiyat"].std()
+#
+#z_score_modifier = 3
+#
+## Z-Score değeri 3'ten büyük veya -3'ten küçük olan satırları seç
+#outliers = df[(df["Z-Score"] > z_score_modifier) | (df["Z-Score"] < -z_score_modifier)]
+#print("\nOutlierlar (Z-Score yöntemi):")
+#print(outliers[["Fiyat"]])
+#
+## Outlierları kaldır
+#df = df[(df["Z-Score"] <= z_score_modifier) & (df["Z-Score"] >= -z_score_modifier)]
+
+########## K-Means ##########
+
 k = 3
 
 # Veri kümesindeki fiyat sütununu al.
@@ -136,7 +138,7 @@ while True:
 # print("\nMerkezler:")
 # print(merkezler)
 
-# Kümeleri ve merkezleri görselleştirmeye başla
+########## Plot ##########
 
 # Plot oluştur
 plt.figure(figsize=(10, 6), dpi=300)
@@ -175,15 +177,7 @@ plt.grid(True)
 x_values = df.index
 
 # Veri kümesindeki fiyat değerlerini y ekseninde göstermek için al
-y_values = fiyatlar
-
-## Y eksenindeki değerlerin 1000'er 1000'er artması için aralıkları ayarla
-#y_min, y_max = int(min(y_values)), int(max(y_values))
-#
-##y_min'i en yakın 1000'e yuvarla
-#y_min = y_min - y_min % 1000
-#
-#plt.yticks(range(y_min, y_max + 1000, 1000))
+y_values = df["Fiyat"]
 
 # Her küme için farklı renkler belirle
 colors = ["red", "green", "blue"]
@@ -216,7 +210,7 @@ plt.ylabel("Fiyat")
 plt.grid(True)
 
 # Kümeleri çiz
-plt.boxplot(kümeler, patch_artist=True, showmeans=True)
+plt.boxplot(kümeler, patch_artist=True, showmeans=True, showfliers=False)
 
 # Box plot'u kaydet
 plt.savefig("box_plot.png", dpi=300, bbox_inches='tight')
