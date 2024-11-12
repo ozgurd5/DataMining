@@ -56,7 +56,7 @@ IQR = Q3 - Q1
 
 # Outlier sınırlarını belirle
 lower_bound = Q1 - 1.5 * IQR
-upper_bound = Q3 + 1.5 * IQR
+upper_bound = Q3 + 3 * IQR
 
 # Outlierları seç
 outliers = df[(df["Fiyat"] < lower_bound) | (df["Fiyat"] > upper_bound)]
