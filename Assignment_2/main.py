@@ -158,6 +158,21 @@ plt.plot(range(len(fiyatlar)), fiyatlar, marker='o')
 # Grafiği kaydet
 plt.savefig("grafik.png", dpi=300, bbox_inches='tight')
 
+# Histogram için bir plot oluştur
+plt.figure(figsize=(10, 6), dpi=300)
+
+# Başlığı belirle
+plt.title(f"Histogram")
+
+# Fiyat sütununu göster
+plt.xlabel("Fiyat")
+
+# Histogram oluştur
+plt.hist(fiyatlar, bins=100)
+
+# Histogram'ı kaydet
+plt.savefig("histogram.png", dpi=300, bbox_inches='tight')
+
 # Scatter için plot oluştur
 plt.figure(figsize=(10, 6), dpi=300)
 
