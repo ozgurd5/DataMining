@@ -230,6 +230,27 @@ plt.boxplot(kümeler, patch_artist=True, showmeans=True, showfliers=False)
 # Box plot'u kaydet
 plt.savefig("box_plot.png", dpi=300, bbox_inches='tight')
 
+# Her bir küme için histogram oluştur
+df["Küme"] = -1
+for i in range(k):
+    df.loc[df["Fiyat"].isin(kümeler[i]), "Küme"] = i + 1
+
+for i in range(k):
+    # Histogram için bir plot oluştur
+    plt.figure(figsize=(10, 6), dpi=300)
+
+    # Başlığı belirle
+    plt.title(f"Küme {i + 1} Histogram")
+
+    # Fiyat sütununu göster
+    plt.xlabel("Fiyat")
+
+    # Histogram oluştur
+    plt.hist(kümeler[i], bins=100)
+
+    # Histogram'ı kaydet
+    plt.savefig(f"küme_{i + 1}_histogram.png", dpi=300, bbox_inches='tight')
+
 ########## Özellikler ##########
 
 # Veri sayısı, ortalama, mod, medyan, standart sapma, minimum ve maksimum değerleri hesapla
@@ -263,28 +284,6 @@ for i in range(k):
     print("Standart Sapma:", pd.Series(kümeler[i]).std())
     print("Minimum:", min(kümeler[i]))
     print("Maksimum:", max(kümeler[i]))
-
-########## Kümeler İçin Histogramlar ##########
-
-df["Küme"] = -1
-for i in range(k):
-    df.loc[df["Fiyat"].isin(kümeler[i]), "Küme"] = i + 1
-
-for i in range(k):
-    # Histogram için bir plot oluştur
-    plt.figure(figsize=(10, 6), dpi=300)
-
-    # Başlığı belirle
-    plt.title(f"Küme {i + 1} Histogram")
-
-    # Fiyat sütununu göster
-    plt.xlabel("Fiyat")
-
-    # Histogram oluştur
-    plt.hist(kümeler[i], bins=100)
-
-    # Histogram'ı kaydet
-    plt.savefig(f"küme_{i + 1}_histogram.png", dpi=300, bbox_inches='tight')
 
 ########## Excel'e Yaz ##########
 
