@@ -38,28 +38,47 @@ df = df.dropna(subset=["Fiyat"])
 df["Fiyat"] = df["Fiyat"].astype(str).str.replace(r"\D", "", regex=True).astype(int)
 
 # Fiyatları küçükten büyüğe sırala
-df = df.sort_values("Fiyat")
+#df = df.sort_values("Fiyat")
 
 # Kümelenmemiş ama temizlenmiş veriyi excel dosyasına yaz
 # print("\nSadece index ve fiyatı içeren 'temizlenmiş_veri_0.xlsx' dosyası oluşturuldu.")
 # df.reset_index()[["index", "Fiyat"]].to_excel("temizlenmiş_veri_0.xlsx", index=False)
 
+# Outlierları tespit etmeye ve kaldırmaya başla
+
+# IQR yöntemi
+
 # Çeyrek değerleri hesapla
-Q1 = df["Fiyat"].quantile(0.25)
-Q3 = df["Fiyat"].quantile(0.75)
-IQR = Q3 - Q1
+#Q1 = df["Fiyat"].quantile(0.25)
+#Q3 = df["Fiyat"].quantile(0.75)
+#IQR = Q3 - Q1
+#
+## Outlier sınırlarını belirle
+#lower_bound = Q1 - 1.5 * IQR
+#upper_bound = Q3 + 1.5 * IQR
+#
+## Outlierları seç
+#outliers = df[(df["Fiyat"] < lower_bound) | (df["Fiyat"] > upper_bound)]
+#print("\nOutlierlar (IQR yöntemi):")
+#print(outliers[["Fiyat"]])
+#
+## Outlierları kaldır
+#df = df[(df["Fiyat"] >= lower_bound) & (df["Fiyat"] <= upper_bound)]
 
-# Outlier sınırlarını belirle
-lower_bound = Q1 - 1.5 * IQR
-upper_bound = Q3 + 1.5 * IQR
+# Z-Score yöntemi
 
-# Outlierları seç
-outliers = df[(df["Fiyat"] < lower_bound) | (df["Fiyat"] > upper_bound)]
-print("\nOutlierlar (IQR yöntemi):")
+# Fiyat sütununu z-score'a çevir
+df["Z-Score"] = (df["Fiyat"] - df["Fiyat"].mean()) / df["Fiyat"].std()
+
+z_score_modifier = 3
+
+# Z-Score değeri 3'ten büyük veya -3'ten küçük olan satırları seç
+outliers = df[(df["Z-Score"] > z_score_modifier) | (df["Z-Score"] < -z_score_modifier)]
+print("\nOutlierlar (Z-Score yöntemi):")
 print(outliers[["Fiyat"]])
 
 # Outlierları kaldır
-df = df[(df["Fiyat"] >= lower_bound) & (df["Fiyat"] <= upper_bound)]
+df = df[(df["Z-Score"] <= z_score_modifier) & (df["Z-Score"] >= -z_score_modifier)]
 
 # K-Means algoritmasına başla
 k = 3
@@ -123,7 +142,25 @@ while True:
 plt.figure(figsize=(10, 6), dpi=300)
 
 # Plot başlığını belirle
-plt.title(f"K-Means")
+plt.title(f"Grafik")
+
+# Index sütununu göster
+plt.xlabel("Index")
+
+# Fiyat sütununu göster
+plt.ylabel("Fiyat")
+
+# Grafik oluştur
+plt.plot(range(len(fiyatlar)), fiyatlar, marker='o')
+
+# Grafiği kaydet
+plt.savefig("grafik.png", dpi=300, bbox_inches='tight')
+
+# Plot oluştur
+plt.figure(figsize=(10, 6), dpi=300)
+
+# Plot başlığını belirle
+plt.title(f"K-Means Scatter Plot")
 
 # Index sütununu göster
 plt.xlabel("Index")
@@ -138,15 +175,15 @@ plt.grid(True)
 x_values = df.index
 
 # Veri kümesindeki fiyat değerlerini y ekseninde göstermek için al
-y_values = df["Fiyat"]
+y_values = fiyatlar
 
-# Y eksenindeki değerlerin 1000'er 1000'er artması için aralıkları ayarla
-y_min, y_max = int(min(y_values)), int(max(y_values))
-
-#y_min'i en yakın 1000'e yuvarla
-y_min = y_min - y_min % 1000
-
-plt.yticks(range(y_min, y_max + 1000, 1000))
+## Y eksenindeki değerlerin 1000'er 1000'er artması için aralıkları ayarla
+#y_min, y_max = int(min(y_values)), int(max(y_values))
+#
+##y_min'i en yakın 1000'e yuvarla
+#y_min = y_min - y_min % 1000
+#
+#plt.yticks(range(y_min, y_max + 1000, 1000))
 
 # Her küme için farklı renkler belirle
 colors = ["red", "green", "blue"]
@@ -158,8 +195,28 @@ for i in range(k):
 plt.scatter(x_values, y_values, color=color_values, s=2)
 
 # Merkezleri çiz
-
 plt.scatter(range(k), merkezler, color="black", s=100, marker="x")
 
-# Plot'u kaydet
-plt.savefig("plot.png", dpi=300, bbox_inches='tight')
+# Scatter Plot'u kaydet
+plt.savefig("scatter_plot.png", dpi=300, bbox_inches='tight')
+
+# Yeni bir plot oluştur
+plt.figure(figsize=(10, 6), dpi=300)
+
+# Box plot başlığını belirle
+plt.title(f"K-Means Box Plot")
+
+# Index sütununu göster
+plt.xlabel("Küme")
+
+# Fiyat sütununu göster
+plt.ylabel("Fiyat")
+
+# Grid çiz
+plt.grid(True)
+
+# Kümeleri çiz
+plt.boxplot(kümeler, patch_artist=True, showmeans=True)
+
+# Box plot'u kaydet
+plt.savefig("box_plot.png", dpi=300, bbox_inches='tight')
