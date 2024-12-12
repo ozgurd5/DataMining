@@ -29,11 +29,10 @@ ozellik_egitim_normalize = min_max_normalizator.fit_transform(ozellik_egitim)
 ozellik_test_normalize = min_max_normalizator.transform(ozellik_test)
 
 # K sayısının belirlenmesi
-k_degerleri = range(1, 100, 2) # Sadece tek sayılar
-cross_validation_katları = range(2, 100)
+k_deger_adaylari = range(1, 100, 2) # Sadece tek sayılar
 cross_validation_df = pd.DataFrame(columns=["k", "r_kare", "mse", "mae"])
 
-for k in k_degerleri:
+for k in k_deger_adaylari:
     # Mesafeye göre ağırlıklı KNN regresyon modeli
     knn_modeli = KNeighborsRegressor(n_neighbors=k, weights='distance')
 
