@@ -19,8 +19,8 @@ random_state = 300 #random.randint(0, 999)
 ozellik_egitim, ozellik_test, hedef_egitim, hedef_test = train_test_split(ozellik, hedef, test_size=0.1, random_state=random_state)
 
 # Hiperparametre adayları
-n_estimators_candidates = range(50, 501, 50)
-max_depth_candidates = range(1, 11)
+n_estimators_adayları = range(50, 501, 50)
+max_depth_adayları = range(1, 11)
 
 # Cross-validation sonuçlarını saklamak için DataFrame
 cross_validation_sonuçlar = pd.DataFrame(columns=["n_estimators", "max_depth", "r_kare", "mse", "mae"])
@@ -31,8 +31,8 @@ mae_scorer = make_scorer(mean_absolute_error, greater_is_better=False)
 r_kare_scorer = make_scorer(r2_score, greater_is_better=True)
 
 # Cross-validation ile sonuçların hesaplanması
-for n_estimators in n_estimators_candidates:
-    for max_depth in max_depth_candidates:
+for n_estimators in n_estimators_adayları:
+    for max_depth in max_depth_adayları:
         random_forest_model = RandomForestRegressor(n_estimators=n_estimators, max_depth=max_depth, random_state=random_state)
 
         # R Kare
@@ -83,7 +83,7 @@ print("En iyi MAE:", en_iyi_mae, "En iyi n_estimators:", en_iyi_mae_n_estimators
 fig, axes = plt.subplots(1, 3, figsize=(18, 6))
 
 # R Kare grafiği (her max_depth farklı çizgi)
-for max_depth in max_depth_candidates:
+for max_depth in max_depth_adayları:
     subset = cross_validation_sonuçlar[cross_validation_sonuçlar["max_depth"] == max_depth]
     axes[0].plot(subset["n_estimators"], subset["r_kare"], marker='o', label=f"max_depth={max_depth}")
 axes[0].set_xlabel("n_estimators")
@@ -93,7 +93,7 @@ axes[0].legend()
 axes[0].grid(True)
 
 # MSE grafiği (her max_depth farklı çizgi)
-for max_depth in max_depth_candidates:
+for max_depth in max_depth_adayları:
     subset = cross_validation_sonuçlar[cross_validation_sonuçlar["max_depth"] == max_depth]
     axes[1].plot(subset["n_estimators"], subset["mse"], marker='o', label=f"max_depth={max_depth}")
 axes[1].set_xlabel("n_estimators")
@@ -103,7 +103,7 @@ axes[1].legend()
 axes[1].grid(True)
 
 # MAE grafiği (her max_depth farklı çizgi)
-for max_depth in max_depth_candidates:
+for max_depth in max_depth_adayları:
     subset = cross_validation_sonuçlar[cross_validation_sonuçlar["max_depth"] == max_depth]
     axes[2].plot(subset["n_estimators"], subset["mae"], marker='o', label=f"max_depth={max_depth}")
 axes[2].set_xlabel("n_estimators")
@@ -115,3 +115,21 @@ axes[2].grid(True)
 plt.tight_layout()
 plt.savefig("random_forest.png")
 plt.show()
+
+# Tahmin Hedefleri
+tahmin_hedef_horsepower = 130
+tahmin_hedef_acceleration = 13
+tahmin_hedef_weight = 3500
+
+# En iyi R Kare sonucunu veren n_estimators ve max_depth değerleri ile model oluşturma
+en_iyi_n_estimators_r_kare = int(en_iyi_r_kare_n_estimators)
+en_iyi_max_depth_r_kare = int(en_iyi_r_kare_max_depth)
+print(f"\nEn iyi R Kare sonucunu veren model oluşturuluyor... n_estimators={en_iyi_n_estimators_r_kare}, max_depth={en_iyi_max_depth_r_kare}")
+
+final_random_forest_model = RandomForestRegressor(n_estimators=en_iyi_n_estimators_r_kare, max_depth=en_iyi_max_depth_r_kare, random_state=random_state)
+final_random_forest_model.fit(ozellik_egitim, hedef_egitim)
+
+# Yeni değerler için tahmin
+araba_df = pd.DataFrame([[tahmin_hedef_horsepower, tahmin_hedef_acceleration, tahmin_hedef_weight]], columns=ozellik_egitim.columns)
+tahmin_mpg = final_random_forest_model.predict(araba_df)
+print(f"Horsepower={tahmin_hedef_horsepower}, Acceleration={tahmin_hedef_acceleration}, Weight={tahmin_hedef_weight} için tahmin edilen MPG: {tahmin_mpg[0]:.2f}")
