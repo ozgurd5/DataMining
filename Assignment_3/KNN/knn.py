@@ -5,8 +5,10 @@ from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.metrics import mean_squared_error, r2_score, make_scorer, mean_absolute_error
-import numpy as np
 import random
+
+# MSE = Mean Squared Error
+# MAE = Mean Absolute Error
 
 # Veri setini yükle
 df = sns.load_dataset("mpg")
@@ -25,9 +27,6 @@ ozellik_egitim, ozellik_test, hedef_egitim, hedef_test = train_test_split(ozelli
 min_max_normalizator = MinMaxScaler()
 ozellik_egitim_normalize = min_max_normalizator.fit_transform(ozellik_egitim)
 ozellik_test_normalize = min_max_normalizator.transform(ozellik_test)
-
-# MSE = Mean Squared Error
-# MAE = Mean Absolute Error
 
 # K sayısının belirlenmesi
 k_degerleri = range(1, 100, 2) # Sadece tek sayılar
@@ -69,7 +68,7 @@ en_iyi_mae = cross_validation_df["mae"].min()
 en_iyi_mae_k = cross_validation_df[cross_validation_df["mae"] == en_iyi_mae]["k"].values[0]
 print("En iyi MAE:", en_iyi_mae, "En iyi k:", en_iyi_mae_k)
 
-# Grafik boyutlarını ayarla
+# K değerlerinin skor grafikleri
 fig, axes = plt.subplots(1, 3, figsize=(18, 6))
 
 # R Kare grafiği
