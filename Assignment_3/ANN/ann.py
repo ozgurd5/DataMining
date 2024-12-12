@@ -1,7 +1,7 @@
 ﻿import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.neural_network import MLPRegressor
 from sklearn.metrics import make_scorer, r2_score, mean_squared_error, mean_absolute_error
 from sklearn.preprocessing import MinMaxScaler
@@ -24,16 +24,16 @@ ozellik_egitim_normalize = min_max_normalizator.fit_transform(ozellik_egitim)
 ozellik_test_normalize = min_max_normalizator.transform(ozellik_test)
 
 # Skorlayıcılar
-mse_scorer = make_scorer(mean_squared_error, greater_is_better=False)
-mae_scorer = make_scorer(mean_absolute_error, greater_is_better=False)
-r_kare_scorer = make_scorer(r2_score, greater_is_better=True)
+scorers = {
+    'r2': make_scorer(r2_score),
+    'neg_mse': make_scorer(mean_squared_error, greater_is_better=False),
+    'neg_mae': make_scorer(mean_absolute_error, greater_is_better=False)
+}
 
 # Hiperparametre adayları
 hidden_layer_sizes_adayları = []
-# 1'den 5'e kadar katman sayısı
-for katman_sayisi in range(1, 6):  # 1, 2, 3, 4, 5 katman
+for katman_sayisi in range(1, 6):  # 1'den 5'e kadar katman sayısı
     for düğüm_sayisi in range(10, 101, 10):  # Her katmanda 10'dan 100'e kadar
-        # Aynı düğüm sayısını tüm katmanlara uygula
         hidden_layer = tuple([düğüm_sayisi] * katman_sayisi)
         hidden_layer_sizes_adayları.append(hidden_layer)
 
@@ -46,58 +46,44 @@ max_iter_adayları = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
 # Cross-validation sonuçlarını saklayacağımız DataFrame
 cross_validation_sonuçlar = pd.DataFrame(columns=["hidden_layer_sizes", "activation", "solver", "alpha", "learning_rate_init", "max_iter", "r_kare", "mse", "mae"])
 
-max_iter = 1000
+# Grid Search için parametreler
+param_grid = {
+    "hidden_layer_sizes": hidden_layer_sizes_adayları,
+    "activation": activation_adayları,
+    "solver": solver_adayları,
+    "alpha": alpha_adayları,
+    "learning_rate_init": learning_rate_init_adayları,
+    "max_iter": max_iter_adayları
+}
 
-# Cross-validation ile sonuçların hesaplanması
-for hidden_layers in hidden_layer_sizes_adayları:
-    for activation_adayı in activation_adayları:
-        for solver_adayı in solver_adayları:
-            for alpha_degeri in alpha_adayları:
-                for learning_rate_init_adayı in learning_rate_init_adayları:
-                    for max_iter_adayı in max_iter_adayları:
+# Grid Search ile model optimizasyonu
+grid_search = GridSearchCV(
+    MLPRegressor(random_state=random_state),
+    param_grid,
+    cv=5,
+    scoring=scorers,
+    refit='r2'  # R-kare skoruna göre en iyi modeli seç
+)
 
-                        ann_model = MLPRegressor(hidden_layer_sizes=hidden_layers,
-                                                 activation=activation_adayı,
-                                                 solver=solver_adayı,
-                                                 alpha=alpha_degeri,
-                                                 learning_rate_init=learning_rate_init_adayı,
-                                                 max_iter=max_iter_adayı,
-                                                 random_state=random_state)
+# Grid Search'ü çalıştır
+grid_search.fit(ozellik_egitim_normalize, hedef_egitim)
 
-                        # R Kare
-                        r_kare_skorları = cross_val_score(ann_model, ozellik_egitim_normalize, hedef_egitim, cv=5, scoring=r_kare_scorer)
-                        r_kare = r_kare_skorları.mean()
+# Detaylı sonuçları DataFrame'e aktar
+for params, mean_score, scores in zip(
+        grid_search.cv_results_['params'],
+        grid_search.cv_results_['mean_test_r2'],
+        grid_search.cv_results_['mean_test_neg_mse']
+):
+    cross_validation_sonuçlar = cross_validation_sonuçlar._append({
+        "hidden_layer_sizes": params['hidden_layer_sizes'],
+        "alpha": params['alpha'],
+        "r_kare": mean_score,
+        "mse": -scores,  # Negatif MSE'yi pozitife çevir
+    }, ignore_index=True)
 
-                        # MSE
-                        mse_skorları = cross_val_score(ann_model, ozellik_egitim_normalize, hedef_egitim, cv=5, scoring=mse_scorer)
-                        mse = (-1) * mse_skorları.mean()
-
-                        # MAE
-                        mae_skorları = cross_val_score(ann_model, ozellik_egitim_normalize, hedef_egitim, cv=5, scoring=mae_scorer)
-                        mae = (-1) * mae_skorları.mean()
-
-                        # Sonuçları dataframe'e ekle
-                        cross_validation_sonuçlar = cross_validation_sonuçlar._append({
-                            "hidden_layer_sizes": hidden_layers,
-                            "activation": activation_adayı,
-                            "solver": solver_adayı,
-                            "alpha": alpha_degeri,
-                            "learning_rate_init": learning_rate_init_adayı,
-                            "max_iter": max_iter_adayı,
-                            "r_kare": r_kare,
-                            "mse": mse,
-                            "mae": mae
-                        }, ignore_index=True)
-
-                        print("hidden_layer_sizes:", hidden_layers,
-                                "activation:", activation_adayı,
-                                "solver:", solver_adayı,
-                                "alpha:", alpha_degeri,
-                                "learning_rate_init:", learning_rate_init_adayı,
-                                "max_iter:", max_iter_adayı,
-                                "R Kare:", r_kare,
-                                "MSE:", mse,
-                                "MAE:", mae)
+# En iyi modelin parametrelerini yazdır
+print("En iyi parametreler:", grid_search.best_params_)
+print("En iyi R-kare skoru:", grid_search.best_score_)
 
 # R kare yöntemine göre en iyi hiperparametreleri bulma
 en_iyi_r_kare = cross_validation_sonuçlar["r_kare"].max()
@@ -152,11 +138,3 @@ print("En iyi MAE:", en_iyi_mae,
         "En iyi alpha:", en_iyi_mae_alpha,
         "En iyi learning_rate_init:", en_iyi_mae_learning_rate_init,
         "En iyi max_iter:", en_iyi_mae_max_iter)
-
-# Grafikler: Tüm parametrelerin etkisini görselleştirme
-fig, axes = plt.subplots(3, 3, figsize=(18, 18))  # 3x3 grid: Her satır bir metrik, her sütun bir parametre
-
-# Metriğin kolonları
-metrics = ["r_kare", "mse", "mae"]
-metric_names = ["R Kare", "MSE", "MAE"]
-param_columns = ["hidden_layer_sizes", "activation", "solver", "alpha", "learning_rate_init", "max_iter"]
