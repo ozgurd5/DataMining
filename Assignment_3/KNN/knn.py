@@ -5,6 +5,7 @@ from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.metrics import mean_squared_error, r2_score, make_scorer, mean_absolute_error
+import numpy as np
 import random
 
 # Veri setini yükle
@@ -98,3 +99,22 @@ axes[2].grid(True)
 plt.tight_layout()
 plt.savefig("knn.png")
 plt.show()
+
+# Tahmin Hedefleri
+tahmin_hedef_horsepower = 130
+tahmin_hedef_acceleration = 13
+tahmin_hedef_weight = 3500
+
+# En iyi R Kare sonucunu veren k değeri ile model oluşturma
+k_final = int(en_iyi_r_kare_k)
+print(f"\nEn iyi k (R Kare bazlı) ile model oluşturuluyor... k={k_final}")
+
+final_knn_model = KNeighborsRegressor(n_neighbors=k_final, weights='distance')
+final_knn_model.fit(ozellik_egitim_normalize, hedef_egitim)
+
+# Yeni değerler için tahmin
+araba_df = pd.DataFrame([[tahmin_hedef_horsepower, tahmin_hedef_acceleration, tahmin_hedef_weight]], columns=ozellik_egitim.columns)
+araba_df_normalize = min_max_normalizator.transform(araba_df)
+
+tahmin_mpg = final_knn_model.predict(araba_df_normalize)
+print(f"Horsepower={tahmin_hedef_horsepower}, Acceleration={tahmin_hedef_acceleration}, Weight={tahmin_hedef_weight} için tahmin edilen MPG: {tahmin_mpg[0]:.2f}")
