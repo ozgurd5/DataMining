@@ -144,3 +144,33 @@ axes[2].grid(True)
 plt.tight_layout()
 plt.savefig("ann.png")
 plt.show()
+
+# Tahmin Hedefleri
+tahmin_hedef_horsepower = 130
+tahmin_hedef_acceleration = 13
+tahmin_hedef_weight = 3500
+
+# En iyi R Kare sonucunu veren hiperparametreler ile model oluşturma
+print(f"\nEn iyi hiperparametrelerle ANN modeli oluşturuluyor...")
+print(f"Hidden Layer Sizes: {en_iyi_r_kare_hidden_layers}")
+print(f"Alpha: {en_iyi_r_kare_alpha}")
+
+# Final ANN modelini oluştur
+final_ann_model = MLPRegressor(
+    hidden_layer_sizes=en_iyi_r_kare_hidden_layers,
+    alpha=en_iyi_r_kare_alpha,
+    random_state=random_state,
+    max_iter=max_iter
+)
+
+# Modeli normalize edilmiş eğitim verileriyle eğit
+final_ann_model.fit(ozellik_egitim_normalize, hedef_egitim)
+
+# Yeni değerler için tahmin
+araba_df = pd.DataFrame([[tahmin_hedef_horsepower, tahmin_hedef_acceleration, tahmin_hedef_weight]],
+                        columns=ozellik_egitim.columns)
+araba_df_normalize = min_max_normalizator.transform(araba_df)
+
+# Tahmin yap
+tahmin_mpg = final_ann_model.predict(araba_df_normalize)
+print(f"Horsepower={tahmin_hedef_horsepower}, Acceleration={tahmin_hedef_acceleration}, Weight={tahmin_hedef_weight} için tahmin edilen MPG: {tahmin_mpg[0]:.2f}")
