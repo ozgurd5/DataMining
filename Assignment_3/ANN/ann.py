@@ -29,19 +29,34 @@ mae_scorer = make_scorer(mean_absolute_error, greater_is_better=False)
 r_kare_scorer = make_scorer(r2_score, greater_is_better=True)
 
 # Hiperparametre adayları
-hidden_layer_sizes_adayları = [(10,10), (50,50), (100,100)]
-alpha_adayları = [0.0001, 0.001, 0.01]
+hidden_layer_sizes_adayları = []
+for katman_sayisi in range(1, 8):
+    for düğüm_sayisi in range(2,13):
+        hidden_layer = tuple([düğüm_sayisi] * katman_sayisi)
+        hidden_layer_sizes_adayları.append(hidden_layer)
+print("hidden_layer_sizes_adayları:", hidden_layer_sizes_adayları)
+
+alpha_adayları = [0.0001, 0.001]
+
+max_iter = 1000
+
+# Eğitim süresini inanılmaz derecede uzattığı ve hali hazırda şu anki eğitime yetecek kadar iyi sonuçlar..
+# ..aldığımız için (r_kare ~0.7) diğer hiperparametreleri değişkenlerini yorum satırına al. Eklemek istersen..
+# ..yorum satırlarını kaldır ve içeriye yeni for döngüleri ekleyerek cross validation sonuçlarını..
+# ..güncelle. Grafikleri güncellemek çok daha sıkıntı olacak, farklı yollar deneyebilirsin.
+
+# activation_adayları = ["identity", "logistic", "tanh", "relu"]
+# solver_adayları = ["lbfgs", "sgd", "adam"]
+# learning_rate_init_adayları = [0.0001, 0.001, 0.01, 0.1, 1]
+# max_iter_adayları = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
 
 # Cross-validation sonuçlarını saklayacağımız DataFrame
 cross_validation_sonuçlar = pd.DataFrame(columns=["hidden_layer_sizes", "alpha", "r_kare", "mse", "mae"])
 
-max_iter = 2000
-solver = 'adam'
-
 # Cross-validation ile sonuçların hesaplanması
 for hidden_layers in hidden_layer_sizes_adayları:
     for alpha_degeri in alpha_adayları:
-        ann_model = MLPRegressor(hidden_layer_sizes=hidden_layers, alpha=alpha_degeri, random_state=random_state, max_iter=max_iter, solver=solver)
+        ann_model = MLPRegressor(hidden_layer_sizes=hidden_layers, alpha=alpha_degeri, random_state=random_state, max_iter=max_iter)
 
         # R Kare
         r_kare_skorları = cross_val_score(ann_model, ozellik_egitim_normalize, hedef_egitim, cv=5, scoring=r_kare_scorer)
@@ -96,7 +111,7 @@ for alpha_degeri in alpha_adayları:
     unique_layers = list(hidden_layer_sizes_adayları)
     x_indices = [unique_layers.index(h) for h in subset["hidden_layer_sizes"]]
     axes[0].plot(x_indices, subset["r_kare"], marker='o', label=f"alpha={alpha_degeri}")
-axes[0].set_xlabel("hidden_layer_sizes index (0:(10,10),1:(50,50),2:(100,100))")
+axes[0].set_xlabel("hidden_layer_sizes index")
 axes[0].set_ylabel("R Kare")
 axes[0].set_title("R Kare'ye Göre ANN Modeli Performansı")
 axes[0].legend()
@@ -108,7 +123,7 @@ for alpha_degeri in alpha_adayları:
     unique_layers = list(hidden_layer_sizes_adayları)
     x_indices = [unique_layers.index(h) for h in subset["hidden_layer_sizes"]]
     axes[1].plot(x_indices, subset["mse"], marker='o', label=f"alpha={alpha_degeri}")
-axes[1].set_xlabel("hidden_layer_sizes index (0:(10,10),1:(50,50),2:(100,100))")
+axes[1].set_xlabel("hidden_layer_sizes index")
 axes[1].set_ylabel("MSE")
 axes[1].set_title("MSE'ye Göre ANN Modeli Performansı")
 axes[1].legend()
@@ -120,7 +135,7 @@ for alpha_degeri in alpha_adayları:
     unique_layers = list(hidden_layer_sizes_adayları)
     x_indices = [unique_layers.index(h) for h in subset["hidden_layer_sizes"]]
     axes[2].plot(x_indices, subset["mae"], marker='o', label=f"alpha={alpha_degeri}")
-axes[2].set_xlabel("hidden_layer_sizes index (0:(10,10),1:(50,50),2:(100,100))")
+axes[2].set_xlabel("hidden_layer_sizes index")
 axes[2].set_ylabel("MAE")
 axes[2].set_title("MAE'ye Göre ANN Modeli Performansı")
 axes[2].legend()
